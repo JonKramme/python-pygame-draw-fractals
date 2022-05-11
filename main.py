@@ -1,6 +1,6 @@
 import sys, pygame
 import time
-
+#https://medium.com/@hhtun21/l-systems-draw-your-first-fractals-139ed0bfcac2
 import numpy as np
 
 theta = np.radians(270)
@@ -104,7 +104,7 @@ while 1:
                 nextPoint = lp + pointTranslations[x]
                 pygame.draw.line(screen, (255, 255, 255), lp, nextPoint, 1)
                 pygame.display.update() # shows every line after it has been drawn
-                time.sleep(0.01)
+                time.sleep(0.001)
                 lp = nextPoint
             pointTranslations.extend([x.dot(rotation) for x in pointTranslations])
             #colorDecrement = [x-(256/fractalDepth) for x in colorDecrement]
