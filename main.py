@@ -1,24 +1,25 @@
 import sys, pygame
+import time
+
 import numpy as np
 
-theta = np.radians(90)
+theta = np.radians(270)
+rotation = np.array(((np.cos(theta), -np.sin(theta)),
+                     (np.sin(theta),  np.cos(theta))))
 
-rotation = np.array(( (np.cos(theta), -np.sin(theta)),
-               (np.sin(theta),  np.cos(theta)) ))
-
-
+pointTranslations = None
 pygame.init()
 points = []
-size = width, height = 320, 240
+size = height, width = 800, 600
 black = 0, 0, 0
 white = 255, 255, 255
 colorDecrement = 255, 255, 255
 planning = True
 screen = pygame.display.set_mode(size)
-minPointDistance = 5  # has to be lower than stepDistance!! TODO:rework this
+minPointDistance = 2  # has to be lower than stepDistance!! TODO:rework this
 alignAxis = False
 fixedStep = False # currently only available during alignAxis Mode.
-stepDistance = 10
+stepDistance = 5
 nextPoint = np.array(pygame.mouse.get_pos())
 fractalDepth = 5
 
@@ -45,10 +46,10 @@ while 1:
                     planning = False
 
                 if event.key == pygame.K_PLUS:
-                    fractalDepth+=1
+                    fractalDepth += 1
 
                 if event.key == pygame.K_MINUS:
-                    fractalDepth-=1
+                    fractalDepth -= 1
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LSHIFT:
@@ -84,20 +85,29 @@ while 1:
                     nextPoint[1] = points[-1][1]+stepDistance*(nextPoint[1]-points[-1][1])//abs(nextPoint[1]-points[-1][1])
 
 
-    screen.fill(black)
+
     if len(points) > 0:
         if planning:
+            screen.fill(black)
             lp = nextPoint  # Points are drawn in revers starting from the "next" position/ the cursor
             for x in points[::-1]:
                 pygame.draw.line(screen, (255, 255, 255), lp, x, 1)
                 lp = x
         else: # fractal drawing time!
-            lp = (200,200)
-            for x in range(fractalDepth):
-                for point in points:
-                    pygame.draw.line(screen, colorDecrement, lp, lp+point, 1) # TODO: Points are origin vectors. need to calculate the vector from one point to the next.
-                    lp = lp+point
-                points = [np.array(x).dot(rotation) for x in points]
-                #colorDecrement = [x-(256/fractalDepth) for x in colorDecrement]
+            if pointTranslations is None:
+                screen.fill(black)
+                pointTranslations = []
+                for x in range(len(points) - 1):
+                    pointTranslations.append(np.array(points[x + 1] - points[x]))
+                lp = (height / 2, width / 2)
+            for x in range(len(pointTranslations)):
+                nextPoint = lp + pointTranslations[x]
+                pygame.draw.line(screen, (255, 255, 255), lp, nextPoint, 1)
+                pygame.display.update() # shows every line after it has been drawn
+                time.sleep(0.01)
+                lp = nextPoint
+            pointTranslations.extend([x.dot(rotation) for x in pointTranslations])
+            #colorDecrement = [x-(256/fractalDepth) for x in colorDecrement]
+
 
     pygame.display.flip()
